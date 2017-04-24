@@ -1,8 +1,9 @@
 from django.db import models
+from django.conf import settings
 
 
 def _localizable_value_str(self):
-    return '"{0}"="{1}"'.format(self.language_code, self.value)
+    return ''
 
 
 class AppModelHelper(object):
@@ -35,11 +36,12 @@ class AppModelHelper(object):
                     model_info.model._meta.label,
                     related_name=attribute_name,
                     on_delete=models.CASCADE),
-                'language_code': models.CharField(max_length=16),
+                'language_code': models.CharField(max_length=16, choices=settings.LANGUAGES),
                 'value': models.CharField(max_length=255),
                 '__str__': _localizable_value_str
             },
             options={
+                'verbose_name': localizable_field,
                 'unique_together': [('target', 'language_code')],
                 'index_together': [('target', 'language_code', 'value')]
             })
@@ -76,10 +78,10 @@ class AppModelHelper(object):
             app_config._sazed_localization_models = OrderedDict()
 
             for model_label, model_info in app_config._sazed_localizable_fields.items():
-                model_info.model._meta._localization_models = {}
+                model_info.model._meta._sazed_localization_models = {}
 
                 for localizable_field in model_info.localizable_fields:
                     dynamic_model = self._create_localizable_value_model(model_info, localizable_field)
 
-                    model_info.model._meta._localization_models[localizable_field] = dynamic_model
+                    model_info.model._meta._sazed_localization_models[localizable_field] = dynamic_model
                     app_config._sazed_localization_models[dynamic_model._meta.label] = dynamic_model

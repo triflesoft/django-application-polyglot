@@ -13,8 +13,8 @@ sqlite3 -echo ../../databases/sazed_test.sqlite3 "PRAGMA main.user_version = 0;"
 sqlite3 -echo ../../databases/sazed_test.sqlite3 "PRAGMA main.synchronous = EXTRA;" > /dev/null
 
 ./manage.py migrate --run-syncdb
-#./manage.py createsuperuser --username admin --noinput --email admin@local
-#./manage.py changepassword admin
+./manage.py createsuperuser --username admin --noinput --email "admin@localhost"
+./manage.py changepassword admin
 
 echo "==== TABLES ===="
 # type|name|tbl_name|rootpage|sql

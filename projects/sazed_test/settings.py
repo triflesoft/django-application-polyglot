@@ -15,6 +15,7 @@ CONFIGURATION_PATH = normpath(join(PROJECTS_PATH, '../configuration'))
 STATIC_PATH = normpath(join(PROJECTS_PATH, '../static'))
 
 path.insert(0, APPLICATIONS_PATH)
+path.insert(0, PROJECTS_PATH)
 
 # See https://docs.djangoproject.com/en/1.10/howto/deployment/checklist/
 
@@ -24,10 +25,10 @@ ALLOWED_HOSTS = []
 # https://docs.djangoproject.com/en/1.10/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
-    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
+    #{'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
+    #{'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
+    #{'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
+    #{'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
 AUTHENTICATION_BACKENDS = (
@@ -49,7 +50,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'sazed'
+    'sazed',
+    'sazed_test'
 ]
 
 MIDDLEWARE = [
@@ -97,7 +99,7 @@ WSGI_APPLICATION = 'wsgi.application'
 
 DATE_FORMAT = 'Y-M-d'
 DATETIME_FORMAT = 'Y-M-d H:i:s'
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'en'
 TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_L10N = True
