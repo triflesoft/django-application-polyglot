@@ -1,5 +1,4 @@
 from django.conf import settings
-from django.db import models
 from django.db.models import options
 
 options.DEFAULT_NAMES = \
@@ -9,9 +8,9 @@ options.DEFAULT_NAMES = \
 DEFAULT_LANGUAGE_CODE = settings.LANGUAGE_CODE
 
 
-class AbstractLocalizableModel(models.Model):
+class AbstractLocalizableMixin(object):
     def __init__(self, *args, **kwargs):
-        super(AbstractLocalizableModel, self).__init__(*args, **kwargs)
+        super(AbstractLocalizableMixin, self).__init__(*args, **kwargs)
 
         from django.utils import translation
 

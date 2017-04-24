@@ -1,13 +1,12 @@
-INVALID_PERMISSION_MESSAGE = (
-    'Permissions on {0} are invalid.'
-    ' String, or tuple of two elements, or list of two elements expected.')
-
-
 class ModelInfo(object):
     def __init__(self, app_config, model, localizable_fields):
+        from ..models import AbstractLocalizableMixin
         self.app_config = app_config
         self.model = model
         self.localizable_fields = set(str(localizable_field) for localizable_field in localizable_fields)
+
+        if len(self.localizable_fields) > 0:
+            self.model.__bases__ += (AbstractLocalizableMixin,)
 
 
 class AppDiscoveryHelper(object):
