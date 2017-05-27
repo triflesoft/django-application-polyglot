@@ -1,8 +1,8 @@
 from django.conf import settings
-from django.db.models import options
+from django.db import models
 
-options.DEFAULT_NAMES = \
-    options.DEFAULT_NAMES + \
+models.options.DEFAULT_NAMES = \
+    models.options.DEFAULT_NAMES + \
     ('localizable_fields', )
 
 DEFAULT_LANGUAGE_CODE = settings.LANGUAGE_CODE

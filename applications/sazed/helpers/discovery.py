@@ -3,7 +3,8 @@ class ModelInfo(object):
         from ..models import AbstractLocalizableMixin
         self.app_config = app_config
         self.model = model
-        self.localizable_fields = set(str(localizable_field) for localizable_field in localizable_fields)
+        self.localizable_fields = {
+            localizable_field: '_{0}_localizations'.format(localizable_field) for localizable_field in localizable_fields}
 
         if len(self.localizable_fields) > 0:
             self.model.__bases__ += (AbstractLocalizableMixin,)

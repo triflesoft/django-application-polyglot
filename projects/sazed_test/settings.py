@@ -66,7 +66,7 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'urls'
 
-SECRET_KEY = 'r=5+((4ta*z7*6g9k+8x8d&ny8n$)hso9w5v-z6lh8%7#$macc'
+SECRET_KEY = 'h9&mw-x%q0^z$x0snjdxnq2!0h0odqyoj8f%giia=$(-)gy!r4'
 CSRF_COOKIE_HTTPONLY = True
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_BROWSER_XSS_FILTER = True

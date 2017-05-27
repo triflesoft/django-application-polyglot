@@ -18,4 +18,5 @@ class SazedAppConfig(AppConfig):
 
         discovery_helper.discover_localizations()
         model_helper.create_localization_models()
-        admin_helper.patch_exiting_admin_inline()
+        admin_helper.patch_existing_model_admin()
+        admin_helper.patch_existing_inline_admin()

@@ -42,7 +42,13 @@ class AppAdminHelper(object):
 
         return model_admin
 
-    def patch_exiting_admin_inline(self):
+    def patch_existing_model_admin(self, **kwargs):
+        from django.contrib.admin import ModelAdmin
+        from ..admin import LocalizationAdminMixin
+
+        ModelAdmin.__bases__ += (LocalizationAdminMixin,)
+
+    def patch_existing_inline_admin(self):
         try:
             from django.contrib.admin import site
             from django.apps import apps
@@ -53,20 +59,21 @@ class AppAdminHelper(object):
                         model_admin = site._registry[model_info.model]
                         setattr(model_admin, '_sazed_model_info', model_info)
 
-                        for localizable_field in sorted(model_info.localizable_fields):
-                            if hasattr(model_admin, 'inlines'):
-                                inlines = list(getattr(model_admin, 'inlines'))
-                            else:
-                                inlines = []
+                        if len(model_info.localizable_fields) > 0:
+                            for field_name in sorted(model_info.localizable_fields.keys()):
+                                if hasattr(model_admin, 'inlines'):
+                                    inlines = list(getattr(model_admin, 'inlines'))
+                                else:
+                                    inlines = []
 
-                            inline = self._create_dynamic_model_inline_admin(
-                                'sazed.admin',
-                                '{0}_{1}_LocalizationInline'.format(model_info.model.__name__, localizable_field.capitalize()),
-                                model_info.model._meta._sazed_localization_models[localizable_field],
-                                model_info.model)
+                                inline = self._create_dynamic_model_inline_admin(
+                                    'sazed.admin',
+                                    '{0}_{1}_LocalizationInline'.format(model_info.model.__name__, field_name.capitalize()),
+                                    model_info.model._meta._sazed_localization_models[field_name],
+                                    model_info.model)
 
-                            inlines.append(inline)
+                                inlines.append(inline)
 
-                            setattr(model_admin, 'inlines', inlines)
+                                setattr(model_admin, 'inlines', inlines)
         except:
             pass
