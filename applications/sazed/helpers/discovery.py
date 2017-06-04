@@ -1,31 +1,45 @@
 class ModelInfo(object):
-    def __init__(self, app_config, model, localizable_fields):
-        from ..models import AbstractLocalizableMixin
-        self.app_config = app_config
+    def __init__(self, model, localizable_fields):
         self.model = model
-        self.localizable_fields = {
-            localizable_field: '_{0}_localizations'.format(localizable_field) for localizable_field in localizable_fields}
+        self.localizable_fields = localizable_fields
 
-        if len(self.localizable_fields) > 0:
-            self.model.__bases__ += (AbstractLocalizableMixin,)
+    def has_localizable_fields(self):
+        return len(self.localizable_fields) > 0
 
 
 class AppDiscoveryHelper(object):
     def __init__(self):
         self._model_infos = {}
 
-    def discover_localizations(self):
-        from collections import OrderedDict
-        from django.apps import apps
+    def _create_property(self, model, property_name, field_name):
+        def _property_get(self):
+            return self._sazed_get_localizable(field_name)
 
-        for app_config in apps.get_app_configs():
-            app_config._sazed_localizable_fields = OrderedDict()
+        def _property_set(self, value):
+            return self._sazed_set_localizable(field_name, value)
 
-            for model in app_config.get_models():
+        setattr(model, property_name, property(_property_get, _property_set))
+
+    def process_model(self, model):
+        from ..models import AbstractLocalizableMixin
+        from django.contrib.postgres import fields
+
+        if hasattr(model._meta, 'app_config') and model._meta.app_config:
+            if not model._meta.label_lower in self._model_infos:
                 if hasattr(model._meta, 'localizable_fields'):
-                    localizable_fields = getattr(model._meta, 'localizable_fields')
+                    localizable_fields = {
+                        field_name: '_{0}_localizations'.format(field_name) for field_name in getattr(model._meta, 'localizable_fields')}
                 else:
-                    localizable_fields = []
+                    localizable_fields = {}
 
-                model_info = ModelInfo(app_config, model, localizable_fields)
-                app_config._sazed_localizable_fields[model._meta.label_lower] = model_info
+                if len(localizable_fields) > 0:
+                    model.__bases__ += (AbstractLocalizableMixin,)
+
+                    for property_name, field_name in localizable_fields.items():
+                        field = fields.HStoreField(field_name, blank=True, null=True)
+                        field.contribute_to_class(model, field_name)
+                        self._create_property(model, property_name, field_name)
+
+                model_info = ModelInfo(model, localizable_fields)
+                model._meta._sazed_model_info = model_info
+                self._model_infos[model._meta.label_lower] = model_info

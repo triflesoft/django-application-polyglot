@@ -37,13 +37,20 @@ AUTHENTICATION_BACKENDS = (
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': join(DATABASES_PATH, PROJECT_NAME + '.sqlite3'),
+        #'ENGINE': 'django.db.backends.sqlite3',
+        #'NAME': join(DATABASES_PATH, PROJECT_NAME + '.sqlite3'),
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': PROJECT_NAME,
+        'USER': PROJECT_NAME,
+        'PASSWORD': PROJECT_NAME,
+        'HOST': '127.0.0.1',
+        'PORT': '5432',
         'ATOMIC_REQUESTS': True
     }
 }
 
 INSTALLED_APPS = [
+    'django.contrib.postgres',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -57,6 +64,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.locale.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -123,7 +131,7 @@ TEMPLATES = [
             ]
         },
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [join(PROJECT_PATH, 'templates')],
         'APP_DIRS': True
     }
 ]

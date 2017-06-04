@@ -1,79 +1,82 @@
-from django.forms import formsets
-from django.forms import ModelForm
-from django.forms.models import BaseInlineFormSet
-from django.conf import settings
+from django import forms
 
 
-class BaseLocalizableFormSet(BaseInlineFormSet):
+class TestModelForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
-        super(BaseLocalizableFormSet, self).__init__(*args, **kwargs)
-        self._language_codes = sorted([language[0] for language in settings.LANGUAGES], reverse=True)
+        instance = kwargs.get('instance', None)
 
-    def total_form_count(self):
-        return len(settings.LANGUAGES)
+        if instance:
+            initial = kwargs.get('initial', {})
+            initial['name'] = instance.name
+            initial['description'] = instance.description
+            kwargs['initial'] = initial
 
-    def _construct_form(self, i, **kwargs):
-        queryset = self.get_queryset()
+        super(TestModelForm, self).__init__(*args, **kwargs)
 
-        if i < len(queryset):
-            try:
-                self._language_codes.remove(queryset[i].language_code)
-            except ValueError:
-                pass
+    def save(self, commit=True):
+        instance = super(TestModelForm, self).save(commit=False)
+        instance.name = self.cleaned_data.get('name', None)
+        instance.description = self.cleaned_data.get('description', None)
 
-            return super(BaseLocalizableFormSet, self)._construct_form(i, **kwargs)
-        else:
-            return super(BaseLocalizableFormSet, self)._construct_form(i, initial={'language_code': self._language_codes.pop()}, **kwargs)
+        if commit:
+            instance.save()
+
+        return instance
 
 
 class AppAdminHelper(object):
-    def _create_dynamic_model_inline_admin(self, app_label, label, model, target_model):
-        from django.contrib import admin
+    def _create_dynamic_admin_form(self, app_config, model, model_info):
+        class Meta:
+            pass
 
-        attrs = {
-            '__module__': app_label,
-            'model': model,
-            'formset': formsets.formset_factory(ModelForm, formset=BaseLocalizableFormSet),
-            'fk_name': 'target',
-            'extra': 3}
+        def _init(self, *args, **kwargs):
+            instance = kwargs.get('instance', None)
 
-        model_admin = type(label, (admin.TabularInline,), attrs)
-        model_admin._target_model = target_model
+            if instance:
+                initial = kwargs.get('initial', {})
 
-        return model_admin
+                for property_name, field_name in model_info.localizable_fields.items():
+                    initial[property_name] = instance._sazed_get_localizable(field_name)
 
-    def patch_existing_model_admin(self, **kwargs):
-        from django.contrib.admin import ModelAdmin
-        from ..admin import LocalizationAdminMixin
+                kwargs['initial'] = initial
 
-        ModelAdmin.__bases__ += (LocalizationAdminMixin,)
+            forms.ModelForm.__init__(self, *args, **kwargs)
 
-    def patch_existing_inline_admin(self):
+        def _save(self, commit=True):
+            instance = super(TestModelForm, self).save(commit=False)
+
+            for property_name, field_name in model_info.localizable_fields.items():
+                instance._sazed_get_localizable(field_name, self.cleaned_data.get(property_name, None))
+
+            if commit:
+                instance.save()
+
+            return instance
+
+        setattr(Meta, 'model', model)
+        setattr(Meta, 'exclude', model_info.localizable_fields.values())
+
+        attrs = {field_name: forms.CharField() for field_name in model_info.localizable_fields}
+        attrs['__module__'] = app_config.label
+        attrs['__init__'] = _init
+        attrs['save'] = _save
+
+        model_form = type('{0}SazedForm'.format(model._meta.label), (forms.ModelForm,), attrs)
+
+        return model_form
+
+    def patch_existing_model_admin(self):
         try:
             from django.contrib.admin import site
             from django.apps import apps
 
             for app_config in apps.get_app_configs():
-                for model_label, model_info in app_config._sazed_localizable_fields.items():
-                    if model_info.model in site._registry:
-                        model_admin = site._registry[model_info.model]
+                for model in app_config.get_models():
+                    model_info = getattr(model._meta, '_sazed_model_info', None)
+
+                    if model_info and model_info.has_localizable_fields() and (model in site._registry):
+                        model_admin = site._registry[model]
                         setattr(model_admin, '_sazed_model_info', model_info)
-
-                        if len(model_info.localizable_fields) > 0:
-                            for field_name in sorted(model_info.localizable_fields.keys()):
-                                if hasattr(model_admin, 'inlines'):
-                                    inlines = list(getattr(model_admin, 'inlines'))
-                                else:
-                                    inlines = []
-
-                                inline = self._create_dynamic_model_inline_admin(
-                                    'sazed.admin',
-                                    '{0}_{1}_LocalizationInline'.format(model_info.model.__name__, field_name.capitalize()),
-                                    model_info.model._meta._sazed_localization_models[field_name],
-                                    model_info.model)
-
-                                inlines.append(inline)
-
-                                setattr(model_admin, 'inlines', inlines)
+                        setattr(model_admin, 'form', self._create_dynamic_admin_form(app_config, model, model_info))
         except:
             pass
