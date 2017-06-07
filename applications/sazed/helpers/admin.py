@@ -43,10 +43,10 @@ class AppAdminHelper(object):
             forms.ModelForm.__init__(self, *args, **kwargs)
 
         def _save(self, commit=True):
-            instance = super(TestModelForm, self).save(commit=False)
+            instance = super(forms.ModelForm, self).save(commit=False)
 
             for property_name, field_name in model_info.localizable_fields.items():
-                instance._sazed_get_localizable(field_name, self.cleaned_data.get(property_name, None))
+                instance._sazed_set_localizable(field_name, self.cleaned_data.get(property_name, None))
 
             if commit:
                 instance.save()
